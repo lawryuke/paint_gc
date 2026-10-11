@@ -23,6 +23,19 @@ El proyecto hace uso intensivo de los siguientes algoritmos de rasterización:
 2.  **Algoritmo del Punto Medio para Elipses:** Usado para trazar curvas cónicas controlando diferencialmente el crecimiento de los ejes $X$ y $Y$. (Previamente probado también para la circunferencia).
 3.  **Relleno Scan-Line con ET/EAT:** Construye una tabla de aristas, mantiene las aristas activas por fila y pinta entre pares de intersecciones usando la regla par-impar. Omite aristas horizontales y excluye los extremos superiores para evitar contar dos veces los vértices compartidos. Los rectángulos aportan cuatro vértices y las elipses un contorno aproximado mediante segmentos. El relleno se rasteriza después de transformar ese contorno para evitar huecos al escalar.
 
+## Transformaciones Geométricas 2D
+
+El módulo `Transform2D.h` / `Transform2D.cpp` implementa desde cero la teoría matricial en coordenadas homogéneas ($P = [x, y, 1]^T$) descrita en la guía `TransformacionesGeometricas_Algoritmos.txt`:
+
+1.  **Traslación $T(dx, dy)$:** Matriz $3 \times 3$ con $dx, dy$ en la última columna. Desplaza figuras en los ejes $X$ e $Y$.
+2.  **Escalamiento $S(sx, sy)$:** Matriz diagonal con factores $sx$ y $sy$. Soporta escalamiento uniforme y no uniforme (diferencial).
+3.  **Rotación $R(\theta)$:** Matriz de rotación con ángulo convertido a radianes ($\theta \cdot \pi / 180$).
+4.  **Composición de Transformaciones (Pivoteo sobre el centro):**
+    *   Cálculo del centroide $C = (cx, cy)$ promediando vértices.
+    *   Encadenamiento matricial: $M = T(cx + tx, cy + ty) \cdot R(\theta) \cdot S(sx, sy) \cdot T(-cx, -cy)$.
+    *   Envío a OpenGL mediante matriz $4 \times 4$ en orden column-major (`glMultMatrixf`).
+5.  **Inversa y Selección:** Cálculo de $M^{-1} = T(C) \cdot S(1/sx, 1/sy) \cdot R(-\theta) \cdot T(-F)$ para mapear el cursor a espacio local y permitir selección y arrastre preciso con figuras rotadas.
+
 ## Arquitectura Orientada a Objetos (POO)
 
 El código monolítico original se refactorizó para seguir principios limpios orientados a objetos, logrando separar la lógica visual y de estado de la lógica puramente matemática:

@@ -3,7 +3,7 @@ CXXFLAGS = -Wall -std=c++14 -Iinclude
 LDFLAGS = -lGL -lGLU -lglut
 
 TARGET = build/paint
-SRCS = src/main.cpp src/App.cpp src/Shape.cpp
+SRCS = src/main.cpp src/App.cpp src/Shape.cpp src/Transform2D.cpp
 OBJS = $(SRCS:.cpp=.o)
 
 all: $(TARGET)
@@ -11,7 +11,7 @@ all: $(TARGET)
 .PHONY: all clean test
 test:
 	@mkdir -p build
-	$(CXX) $(CXXFLAGS) -o build/scanline_test tests/scanline_test.cpp src/Shape.cpp $(LDFLAGS)
+	$(CXX) $(CXXFLAGS) -o build/scanline_test tests/scanline_test.cpp src/Shape.cpp src/Transform2D.cpp $(LDFLAGS)
 	./build/scanline_test
 
 $(TARGET): $(OBJS)

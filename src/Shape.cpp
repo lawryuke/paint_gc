@@ -156,22 +156,35 @@ std::vector<Point> Shape::getPoints() const { return points; }
 
 Point Shape::getCenter() const {
     if (points.empty()) return {0,0};
-    int minx = points[0].x, maxx = points[0].x;
-    int miny = points[0].y, maxy = points[0].y;
-    for (const auto& p : points) {
-        if (p.x < minx) minx = p.x; if (p.x > maxx) maxx = p.x;
-        if (p.y < miny) miny = p.y; if (p.y > maxy) maxy = p.y;
-    }
-    return {(minx + maxx)/2, (miny + maxy)/2};
+    // Algoritmo de calculo de centroide: Promedio de vertices
+    return computeCentroid(points);
+}
+
+Matrix3x3 Shape::getTransformMatrix() const {
+    Point c = getCenter();
+    // Algoritmo de Pivoteo
+    // 1. TCentro: Trasladar el centro al origen T(-cx, -cy)
+    // 2. S: Escalamiento S(sx, sy)
+    // 3. R: Rotacion R(angle)
+    // 4. TFinal: Trasladar a la posicion final T(cx + tx, cy + ty)
+    // M = TFinal * R * S * TCentro
+    return buildPivotMatrix(c, tx, ty, sx, sy, angle);
+}
+
+Matrix3x3 Shape::getInverseTransformMatrix() const {
+    Point c = getCenter();
+    // Inversa
+    // M^(-1) = T(C) * S(1/sx, 1/sy) * R(-angle) * T(-F)
+    return Matrix3x3::inversePivot(c, tx, ty, sx, sy, angle);
 }
 
 void Shape::applyTransform() const {
     glPushMatrix();
-    Point c = getCenter();
-    glTranslatef(c.x + tx, c.y + ty, 0.0f);
-    glRotatef(angle, 0.0f, 0.0f, 1.0f);
-    glScalef(sx, sy, 1.0f);
-    glTranslatef(-c.x, -c.y, 0.0f);
+    // Aplicamos la matriz homogenea 3x3 convertida para OpenGL (glMultMatrixf)
+    Matrix3x3 M = getTransformMatrix();
+    float glMat[16];
+    M.toOpenGLMatrix(glMat);
+    glMultMatrixf(glMat);
 }
 
 void Shape::drawHitbox() const {
@@ -218,21 +231,62 @@ void Shape::drawHitbox() const {
     draw_anchor(midx, maxy + pad + 15);
 }
 
-void Shape::getTransformedBounds(int& minx, int& maxx, int& miny, int& maxy) const {
-    if (points.empty()) return;
-    minx = points[0].x; maxx = minx;
-    miny = points[0].y; maxy = miny;
-    for (auto p : points) {
+void Shape::getHitboxCorners(Point& tl, Point& tr, Point& br, Point& bl) const {
+    if (points.empty()) {
+        tl = tr = br = bl = {0, 0};
+        return;
+    }
+    int minx = points[0].x, maxx = points[0].x;
+    int miny = points[0].y, maxy = points[0].y;
+    for (const auto& p : points) {
         if (p.x < minx) minx = p.x; if (p.x > maxx) maxx = p.x;
         if (p.y < miny) miny = p.y; if (p.y > maxy) maxy = p.y;
     }
-    Point c = getCenter();
-    float w = (maxx - minx + 10) * sx; 
-    float h = (maxy - miny + 10) * sy;
-    minx = c.x + tx - w/2;
-    maxx = c.x + tx + w/2;
-    miny = c.y + ty - h/2;
-    maxy = c.y + ty + h/2;
+    int pad = 5;
+    Matrix3x3 M = getTransformMatrix();
+    tl = M.transformPoint({minx - pad, maxy + pad});
+    tr = M.transformPoint({maxx + pad, maxy + pad});
+    br = M.transformPoint({maxx + pad, miny - pad});
+    bl = M.transformPoint({minx - pad, miny - pad});
+}
+
+Point Shape::getRotateAnchor() const {
+    if (points.empty()) return {0, 0};
+    int minx = points[0].x, maxx = points[0].x;
+    int maxy = points[0].y;
+    for (const auto& p : points) {
+        if (p.x < minx) minx = p.x; if (p.x > maxx) maxx = p.x;
+        if (p.y > maxy) maxy = p.y;
+    }
+    int pad = 5;
+    Matrix3x3 M = getTransformMatrix();
+    return M.transformPoint({(minx + maxx) / 2, maxy + pad + 15});
+}
+
+bool Shape::containsPoint(int worldX, int worldY) const {
+    if (points.empty()) return false;
+    int minx = points[0].x, maxx = points[0].x;
+    int miny = points[0].y, maxy = points[0].y;
+    for (const auto& p : points) {
+        if (p.x < minx) minx = p.x; if (p.x > maxx) maxx = p.x;
+        if (p.y < miny) miny = p.y; if (p.y > maxy) maxy = p.y;
+    }
+    // Usar la transformacion inversa para evaluar en el espacio local original
+    Matrix3x3 invM = getInverseTransformMatrix();
+    Point localP = invM.transformPoint({worldX, worldY});
+    int pad = 8;
+    return (localP.x >= minx - pad && localP.x <= maxx + pad &&
+            localP.y >= miny - pad && localP.y <= maxy + pad);
+}
+
+void Shape::getTransformedBounds(int& minx, int& maxx, int& miny, int& maxy) const {
+    if (points.empty()) return;
+    Point tl, tr, br, bl;
+    getHitboxCorners(tl, tr, br, bl);
+    minx = std::min(std::min(tl.x, tr.x), std::min(br.x, bl.x));
+    maxx = std::max(std::max(tl.x, tr.x), std::max(br.x, bl.x));
+    miny = std::min(std::min(tl.y, tr.y), std::min(br.y, bl.y));
+    maxy = std::max(std::max(tl.y, tr.y), std::max(br.y, bl.y));
 }
 
 // --- Derived Shapes ---

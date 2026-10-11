@@ -198,19 +198,22 @@ void App::mouse(int button, int state, int x, int y) {
             isDragging = false;
             
             if (selectedShapeIndex != -1) {
-                int minx, maxx, miny, maxy;
-                shapes[selectedShapeIndex]->getTransformedBounds(minx, maxx, miny, maxy);
-                int pad = 5;
-                auto in_rect = [&](int px, int py, int rx, int ry) {
-                    return px >= rx-8 && px <= rx+8 && py >= ry-8 && py <= ry+8;
+                auto& s = shapes[selectedShapeIndex];
+                Point tl, tr, br, bl;
+                s->getHitboxCorners(tl, tr, br, bl);
+                Point rot = s->getRotateAnchor();
+                
+                auto in_anchor = [&](int px, int py, Point anchor) {
+                    return px >= anchor.x - 8 && px <= anchor.x + 8 &&
+                           py >= anchor.y - 8 && py <= anchor.y + 8;
                 };
                 
-                if (in_rect(worldX, worldY, minx-pad, maxy+pad)) dragMode = DRAG_SCALE_TL;
-                else if (in_rect(worldX, worldY, maxx+pad, maxy+pad)) dragMode = DRAG_SCALE_TR;
-                else if (in_rect(worldX, worldY, maxx+pad, miny-pad)) dragMode = DRAG_SCALE_BR;
-                else if (in_rect(worldX, worldY, minx-pad, miny-pad)) dragMode = DRAG_SCALE_BL;
-                else if (in_rect(worldX, worldY, (minx+maxx)/2, maxy+pad+15)) dragMode = DRAG_ROTATE;
-                else if (worldX >= minx && worldX <= maxx && worldY >= miny && worldY <= maxy) {
+                if (in_anchor(worldX, worldY, tl)) dragMode = DRAG_SCALE_TL;
+                else if (in_anchor(worldX, worldY, tr)) dragMode = DRAG_SCALE_TR;
+                else if (in_anchor(worldX, worldY, br)) dragMode = DRAG_SCALE_BR;
+                else if (in_anchor(worldX, worldY, bl)) dragMode = DRAG_SCALE_BL;
+                else if (in_anchor(worldX, worldY, rot)) dragMode = DRAG_ROTATE;
+                else if (s->containsPoint(worldX, worldY)) {
                     dragMode = DRAG_TRANSLATE;
                 }
                 
@@ -225,9 +228,7 @@ void App::mouse(int button, int state, int x, int y) {
                 selectedShapeIndex = -1;
                 
                 for (int i = shapes.size()-1; i >= 0; --i) {
-                    int minx, maxx, miny, maxy;
-                    shapes[i]->getTransformedBounds(minx, maxx, miny, maxy);
-                    if (worldX >= minx && worldX <= maxx && worldY >= miny && worldY <= maxy) {
+                    if (shapes[i]->containsPoint(worldX, worldY)) {
                         shapes[i]->selected = true;
                         selectedShapeIndex = i;
                         dragMode = DRAG_TRANSLATE;
