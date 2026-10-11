@@ -4,7 +4,7 @@
 #include <vector>
 #include <GL/glut.h>
 
-struct Point { int x, y; };
+#include "Transform2D.h"
 struct FillPoint { double x, y; };
 struct ScanlineSpan { int y, x1, x2; };
 
@@ -71,16 +71,18 @@ public:
     std::vector<Point> getPoints() const;
     
     /**
-     * @brief return the center of the original bounding box, or the origin for no points
-     *
-     * @return integer center of the original bounding box, or the origin when there are no points
+     * @brief return the centroid of the shape (promedio de vertices)
      */
     Point getCenter() const;
 
     /**
-     * @brief push the current matrix and apply translation, rotation and scaling around the center
-     *
-     * require the caller to restore the matrix with glPopMatrix after drawing
+     * @brief Matriz de Transformacion 3x3 (Pivoteo: TFinal * R * S * TCentro)
+     */
+    Matrix3x3 getTransformMatrix() const;
+    Matrix3x3 getInverseTransformMatrix() const;
+
+    /**
+     * @brief push the current matrix and apply the composite 3x3 transformation matrix
      */
     void applyTransform() const;
 
@@ -90,16 +92,12 @@ public:
     void drawHitbox() const;
 
     /**
-     * @brief compute padded selection bounds with translation and scale, excluding rotation
-     *
-     * leave output values unchanged when the shape has no points
-     *
-     * @param minx output minimum x coordinate of the padded selection bounds
-     * @param maxx output maximum x coordinate of the padded selection bounds
-     * @param miny output minimum y coordinate of the padded selection bounds
-     * @param maxy output maximum y coordinate of the padded selection bounds
+     * @brief compute padded selection bounds
      */
     void getTransformedBounds(int& minx, int& maxx, int& miny, int& maxy) const;
+    bool containsPoint(int worldX, int worldY) const;
+    Point getRotateAnchor() const;
+    void getHitboxCorners(Point& tl, Point& tr, Point& br, Point& bl) const;
 };
 
 // derived shapes
