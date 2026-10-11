@@ -5,15 +5,15 @@ Este proyecto es una mini-aplicación de dibujo interactivo (estilo Paint) desar
 ## Características Principales
 
 *   **Renderizado por Primitivas (Píxel a Píxel):** Las figuras no se dibujan usando las funciones poligonales de alto nivel de OpenGL, sino que se renderizan calculando e iluminando píxeles individuales (`GL_POINTS`) gracias a algoritmos matemáticos clásicos.
-*   **Barra de Herramientas Interactiva (Navbar):** Interfaz gráfica clicable en la parte superior para intercambiar rápidamente entre las diferentes herramientas (F1 - F6).
+*   **Barra de Herramientas Interactiva (Navbar):** Interfaz gráfica clicable en la parte superior para intercambiar rápidamente entre las diferentes herramientas (1 - 6): selección, paneo, línea, rectángulo, elipse y polígono.
 *   **Manipulación de Figuras (Hitbox):** 
-    *   **Selección (F1):** Permite aislar una figura dibujada en el lienzo dándole clic. Aparecerá un marco punteado (Bounding Box) alrededor de ella.
+    *   **Selección (1):** Permite aislar una figura dibujada en el lienzo dándole clic. Aparecerá un marco punteado (Bounding Box) alrededor de ella.
     *   **Borrado (Delete o Backspace):** Elimina la figura seleccionada. Si no hay una selección, no hace nada.
-    *   **Relleno (R / G / B):** Selecciona un polígono, rectángulo o elipse con F1 y pulsa R para rojo, G para verde o B para azul. Cada figura conserva su color al moverla, escalarla o rotarla.
+    *   **Relleno (R / G / B):** Selecciona un polígono, rectángulo o elipse con 1 y pulsa R para rojo, G para verde o B para azul. Cada figura conserva su color al moverla, escalarla o rotarla.
     *   **Traslación:** Manteniendo el clic presionado dentro de la figura seleccionada, se puede arrastrar por el lienzo.
     *   **Escalamiento:** Posee cuadrados (anclajes) en las cuatro esquinas que permiten encoger o agrandar dinámicamente la forma seleccionada.
     *   **Rotación:** Cuenta con un pivote en la parte superior del marco; arrastrando de él se girará la figura dinámicamente usando las matrices de modelo-vista (`GL_MODELVIEW`) de OpenGL.
-*   **Navegación del Lienzo (Paneo - F2):** Posibilidad de arrastrar la cámara por un lienzo de trabajo infinito.
+*   **Navegación del Lienzo (Paneo - 2):** Posibilidad de arrastrar la cámara por un lienzo de trabajo infinito.
 *   **Preview Dinámico:** Al construir una línea, rectángulo o elipse, se mostrará una previsualización de la forma adaptándose al ratón en tiempo real (antes de soltar el clic).
 
 ## Algoritmos de Rasterización Implementados

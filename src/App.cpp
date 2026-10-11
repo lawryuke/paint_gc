@@ -28,8 +28,7 @@ void App::run(int argc, char** argv) {
     glutReshapeFunc(reshapeCallback);
     glutMouseFunc(mouseCallback);
     glutMotionFunc(motionCallback);
-    glutSpecialFunc(keyboardCallback);
-    glutKeyboardFunc(normalKeyboardCallback);
+    glutKeyboardFunc(keyboardCallback);
     
     glutMainLoop();
 }
@@ -295,21 +294,22 @@ void App::motion(int x, int y) {
     }
 }
 
-void App::keyboard(int key, int x, int y) {
+void App::keyboard(unsigned char key, int x, int y) {
     switch (key) {
-        case GLUT_KEY_F1: currentTool = SELECT_TOOL; break;
-        case GLUT_KEY_F2: currentTool = PAN_TOOL; break;
-        case GLUT_KEY_F3: currentTool = LINE_TOOL; break;
-        case GLUT_KEY_F4: currentTool = RECT_TOOL; break;
-        case GLUT_KEY_F5: currentTool = ELLIPSE_TOOL; break;
-        case GLUT_KEY_F6: currentTool = POLY_TOOL; break;
+        case '1': currentTool = SELECT_TOOL; break;
+        case '2': currentTool = PAN_TOOL; break;
+        case '3': currentTool = LINE_TOOL; break;
+        case '4': currentTool = RECT_TOOL; break;
+        case '5': currentTool = ELLIPSE_TOOL; break;
+        case '6': currentTool = POLY_TOOL; break;
     }
-    isDragging = false;
-    currentPoly.clear();
-    glutPostRedisplay();
-}
-
-void App::normalKeyboard(unsigned char key, int x, int y) {
+    if (key >= '1' && key <= '6') {
+        isDragging = false;
+        dragMode = DRAG_NONE;
+        currentPoly.clear();
+        glutPostRedisplay();
+        return;
+    }
     if (selectedShapeIndex == -1) return;
     switch (key) {
         case 'r': case 'R': shapes[selectedShapeIndex]->setFillColor(1.0f, 0.0f, 0.0f); break;
@@ -332,9 +332,22 @@ void App::normalKeyboard(unsigned char key, int x, int y) {
 }
 
 // Static callbacks wrapper
-void App::displayCallback() { if(instance) instance->display(); }
-void App::reshapeCallback(int w, int h) { if(instance) instance->reshape(w, h); }
-void App::mouseCallback(int button, int state, int x, int y) { if(instance) instance->mouse(button, state, x, y); }
-void App::motionCallback(int x, int y) { if(instance) instance->motion(x, y); }
-void App::keyboardCallback(int key, int x, int y) { if(instance) instance->keyboard(key, x, y); }
-void App::normalKeyboardCallback(unsigned char key, int x, int y) { if(instance) instance->normalKeyboard(key, x, y); }
+void App::displayCallback() {
+    if(instance) instance->display();
+}
+
+void App::reshapeCallback(int w, int h) {
+    if(instance) instance->reshape(w, h);
+}
+
+void App::mouseCallback(int button, int state, int x, int y) {
+    if(instance) instance->mouse(button, state, x, y);
+}
+
+void App::motionCallback(int x, int y) {
+    if(instance) instance->motion(x, y);
+}
+
+void App::keyboardCallback(unsigned char key, int x, int y) {
+    if(instance) instance->keyboard(key, x, y);
+}

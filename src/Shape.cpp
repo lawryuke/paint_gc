@@ -251,8 +251,8 @@ std::vector<FillPoint> EllipseShape::getFillContour() const {
     int b = std::abs(points[1].y - points[0].y) / 2;
     if (a == 0 || b == 0) return {};
 
-    // Approximate the curved boundary with edges, then use the same ET/EAT.
-    // Increase sampling with the displayed size to keep the boundary smooth.
+    // approximate the curved boundary with edges, then use the same ET/EAT
+    // increase sampling with the displayed size to keep the boundary smooth
     const double pi = 3.141592653589793;
     int segments = std::max(32, static_cast<int>(std::ceil(2 * pi * std::max(a * sx, b * sy))));
     segments = ((segments + 3) / 4) * 4;
@@ -293,8 +293,9 @@ void EllipseShape::draw() const {
 
 void PolyShape::draw() const {
     if(points.size() > 1) {
-        for (size_t i = 0; i < points.size() - 1; ++i)
+        for (size_t i = 0; i < points.size() - 1; ++i) {
             inc_line(points[i].x, points[i].y, points[i+1].x, points[i+1].y);
+        }
         inc_line(points.back().x, points.back().y, points[0].x, points[0].y);
     }
 }
