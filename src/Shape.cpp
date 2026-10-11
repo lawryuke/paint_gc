@@ -1,6 +1,63 @@
 #include "Shape.h"
 #include <cmath>
 #include <cstdlib>
+#include <algorithm>
+#include <cmath>
+#include <map>
+#include <limits>
+
+namespace {
+struct Edge {
+    int ymax;
+    double x, invM;
+};
+}
+
+std::vector<ScanlineSpan> scanlineFill(const std::vector<FillPoint>& contour) {
+    std::vector<ScanlineSpan> spans;
+    if (contour.size() < 3) return spans;
+
+    // A sparse ET supports negative coordinates and any window size.
+    std::map<int, std::vector<Edge>> edgeTable;
+    int ymax = std::numeric_limits<int>::min();
+    for (size_t i = 0; i < contour.size(); ++i) {
+        FillPoint lower = contour[i];
+        FillPoint upper = contour[(i + 1) % contour.size()];
+        if (lower.y == upper.y) continue;
+        if (lower.y > upper.y) std::swap(lower, upper);
+
+        int firstY = static_cast<int>(std::ceil(lower.y));
+        int endY = static_cast<int>(std::ceil(upper.y));
+        if (firstY >= endY) continue;
+        double invM = (upper.x - lower.x) / (upper.y - lower.y);
+        edgeTable[firstY].push_back({endY, lower.x + (firstY - lower.y) * invM, invM});
+        ymax = std::max(ymax, endY);
+    }
+    if (edgeTable.empty()) return spans;
+
+    std::vector<Edge> activeEdges;
+    for (int y = edgeTable.begin()->first; y < ymax; ++y) {
+        auto starting = edgeTable.find(y);
+        if (starting != edgeTable.end()) {
+            activeEdges.insert(activeEdges.end(), starting->second.begin(), starting->second.end());
+        }
+        // Include the lower endpoint and exclude the upper endpoint so shared
+        // vertices are not counted twice.
+        activeEdges.erase(std::remove_if(activeEdges.begin(), activeEdges.end(),
+            [y](const Edge& edge) { return y >= edge.ymax; }), activeEdges.end());
+        std::sort(activeEdges.begin(), activeEdges.end(),
+            [](const Edge& a, const Edge& b) { return a.x < b.x; });
+
+        for (size_t i = 0; i + 1 < activeEdges.size(); i += 2) {
+            int x1 = static_cast<int>(std::ceil(activeEdges[i].x));
+            int x2 = static_cast<int>(std::floor(activeEdges[i + 1].x));
+            if (x1 <= x2) spans.push_back({y, x1, x2});
+        }
+        for (auto& edge : activeEdges) edge.x += edge.invM;
+    }
+    return spans;
+}
+
 
 void write_pixel(int x, int y) {
     glBegin(GL_POINTS);
@@ -60,6 +117,39 @@ void MidPointEllipse(int cx, int cy, int a, int b) {
 }
 
 // --- Shape implementation ---
+std::vector<FillPoint> Shape::getFillContour() const { return {}; }
+
+void Shape::setFillColor(float r, float g, float b) {
+    if (getFillContour().size() < 3) return;
+    filled = true;
+    fillR = r;
+    fillG = g;
+    fillB = b;
+}
+
+void Shape::drawFill() const {
+    if (!filled) return;
+    auto contour = getFillContour();
+    Point c = getCenter();
+    double radians = angle * 3.141592653589793 / 180.0;
+    double cosine = std::cos(radians), sine = std::sin(radians);
+    // Rasterize after transforming the contour so scaling does not leave
+    // gaps between pixels. The canvas pan is already applied by App.
+    for (auto& p : contour) {
+        double x = (p.x - c.x) * sx;
+        double y = (p.y - c.y) * sy;
+        p = {c.x + tx + x * cosine - y * sine,
+             c.y + ty + x * sine + y * cosine};
+    }
+    auto spans = scanlineFill(contour);
+    glColor3f(fillR, fillG, fillB);
+    glBegin(GL_POINTS);
+    for (const auto& span : spans) {
+        for (int x = span.x1; x <= span.x2; ++x) glVertex2i(x, span.y);
+    }
+    glEnd();
+}
+
 void Shape::addPoint(Point p) { points.push_back(p); }
 void Shape::setPoint(size_t idx, Point p) { if (idx < points.size()) points[idx] = p; }
 std::vector<Point> Shape::getPoints() const { return points; }
@@ -146,6 +236,41 @@ void Shape::getTransformedBounds(int& minx, int& maxx, int& miny, int& maxy) con
 }
 
 // --- Derived Shapes ---
+std::vector<FillPoint> RectShape::getFillContour() const {
+    if (points.size() != 2) return {};
+    double x1 = points[0].x, y1 = points[0].y;
+    double x2 = points[1].x, y2 = points[1].y;
+    return {{x1, y1}, {x2, y1}, {x2, y2}, {x1, y2}};
+}
+
+std::vector<FillPoint> EllipseShape::getFillContour() const {
+    if (points.size() != 2) return {};
+    int cx = (points[0].x + points[1].x) / 2;
+    int cy = (points[0].y + points[1].y) / 2;
+    int a = std::abs(points[1].x - points[0].x) / 2;
+    int b = std::abs(points[1].y - points[0].y) / 2;
+    if (a == 0 || b == 0) return {};
+
+    // Approximate the curved boundary with edges, then use the same ET/EAT.
+    // Increase sampling with the displayed size to keep the boundary smooth.
+    const double pi = 3.141592653589793;
+    int segments = std::max(32, static_cast<int>(std::ceil(2 * pi * std::max(a * sx, b * sy))));
+    segments = ((segments + 3) / 4) * 4;
+    std::vector<FillPoint> contour;
+    contour.reserve(segments);
+    for (int i = 0; i < segments; ++i) {
+        double theta = 2 * pi * i / segments;
+        contour.push_back({cx + a * std::cos(theta), cy + b * std::sin(theta)});
+    }
+    return contour;
+}
+
+std::vector<FillPoint> PolyShape::getFillContour() const {
+    std::vector<FillPoint> contour;
+    for (auto p : points) contour.push_back({static_cast<double>(p.x), static_cast<double>(p.y)});
+    return contour;
+}
+
 void LineShape::draw() const {
     if(points.size() == 2)
         inc_line(points[0].x, points[0].y, points[1].x, points[1].y);

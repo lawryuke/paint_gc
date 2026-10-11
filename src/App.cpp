@@ -109,6 +109,7 @@ void App::display() {
     glTranslatef(panX, panY, 0.0f);
     
     for (const auto& s : shapes) {
+        s->drawFill();
         glColor3f(1.0f, 1.0f, 1.0f);
         s->applyTransform();
         s->draw();
@@ -309,6 +310,17 @@ void App::keyboard(int key, int x, int y) {
 }
 
 void App::normalKeyboard(unsigned char key, int x, int y) {
+    if (selectedShapeIndex == -1) return;
+    switch (key) {
+        case 'r': case 'R': shapes[selectedShapeIndex]->setFillColor(1.0f, 0.0f, 0.0f); break;
+        case 'g': case 'G': shapes[selectedShapeIndex]->setFillColor(0.0f, 1.0f, 0.0f); break;
+        case 'b': case 'B': shapes[selectedShapeIndex]->setFillColor(0.0f, 0.0f, 1.0f); break;
+        default: break;
+    }
+    if (key == 'r' || key == 'R' || key == 'g' || key == 'G' || key == 'b' || key == 'B') {
+        glutPostRedisplay();
+        return;
+    }
     // GLUT sends Backspace (8) and Delete (127) as regular keyboard events.
     if ((key != 8 && key != 127) || selectedShapeIndex == -1) return;
 

@@ -8,6 +8,12 @@ OBJS = $(SRCS:.cpp=.o)
 
 all: $(TARGET)
 
+.PHONY: all clean test
+test:
+	@mkdir -p build
+	$(CXX) $(CXXFLAGS) -o build/scanline_test tests/scanline_test.cpp src/Shape.cpp $(LDFLAGS)
+	./build/scanline_test
+
 $(TARGET): $(OBJS)
 	@mkdir -p build
 	$(CXX) $(CXXFLAGS) -o $(TARGET) $(OBJS) $(LDFLAGS)

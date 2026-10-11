@@ -9,6 +9,7 @@ Este proyecto es una mini-aplicación de dibujo interactivo (estilo Paint) desar
 *   **Manipulación de Figuras (Hitbox):** 
     *   **Selección (F1):** Permite aislar una figura dibujada en el lienzo dándole clic. Aparecerá un marco punteado (Bounding Box) alrededor de ella.
     *   **Borrado (Delete o Backspace):** Elimina la figura seleccionada. Si no hay una selección, no hace nada.
+    *   **Relleno (R / G / B):** Selecciona un polígono, rectángulo o elipse con F1 y pulsa R para rojo, G para verde o B para azul. Cada figura conserva su color al moverla, escalarla o rotarla.
     *   **Traslación:** Manteniendo el clic presionado dentro de la figura seleccionada, se puede arrastrar por el lienzo.
     *   **Escalamiento:** Posee cuadrados (anclajes) en las cuatro esquinas que permiten encoger o agrandar dinámicamente la forma seleccionada.
     *   **Rotación:** Cuenta con un pivote en la parte superior del marco; arrastrando de él se girará la figura dinámicamente usando las matrices de modelo-vista (`GL_MODELVIEW`) de OpenGL.
@@ -20,6 +21,7 @@ Este proyecto es una mini-aplicación de dibujo interactivo (estilo Paint) desar
 El proyecto hace uso intensivo de los siguientes algoritmos de rasterización:
 1.  **Algoritmo de Línea de Bresenham:** Utilizado intensamente para dibujar líneas diagonales, rectángulos perfectos, y conectar los vértices arbitrarios de los polígonos irregulares en tiempo real.
 2.  **Algoritmo del Punto Medio para Elipses:** Usado para trazar curvas cónicas controlando diferencialmente el crecimiento de los ejes $X$ y $Y$. (Previamente probado también para la circunferencia).
+3.  **Relleno Scan-Line con ET/EAT:** Construye una tabla de aristas, mantiene las aristas activas por fila y pinta entre pares de intersecciones usando la regla par-impar. Omite aristas horizontales y excluye los extremos superiores para evitar contar dos veces los vértices compartidos. Los rectángulos aportan cuatro vértices y las elipses un contorno aproximado mediante segmentos. El relleno se rasteriza después de transformar ese contorno para evitar huecos al escalar.
 
 ## Arquitectura Orientada a Objetos (POO)
 
