@@ -26,30 +26,128 @@ private:
     int winWidth, winHeight;
     int navbarHeight;
     
-    static App* instance; // Singleton for GLUT callbacks
+    static App* instance; // active application instance for GLUT callbacks
 
 public:
+    /**
+     * @brief initialize tools, selection, dragging, canvas position and window dimensions
+     */
     App();
     
+    /**
+     * @brief create the GLUT window, register callbacks and start the event loop
+     *
+     * @param argc number of command-line arguments passed to GLUT
+     * @param argv command-line argument strings passed to GLUT
+     */
     void run(int argc, char** argv);
     
-    // Callbacks
+    /**
+     * @brief render the canvas, shape fills, outlines, selection controls and toolbar
+     */
     void display();
+
+    /**
+     * @brief update window dimensions, viewport and orthographic projection
+     *
+     * @param w new window width in pixels
+     * @param h new window height in pixels
+     */
     void reshape(int w, int h);
+
+    /**
+     * @brief handle mouse buttons to switch tools, create shapes and start or stop dragging
+     *
+     * @param button identifier used by GLUT of the mouse button that changed state
+     * @param state button state reported as GLUT_DOWN or GLUT_UP
+     * @param x mouse x coordinate measured from the left edge of the window
+     * @param y mouse y coordinate measured from the top edge of the window
+     */
     void mouse(int button, int state, int x, int y);
+
+    /**
+     * @brief update canvas panning, drawing previews or the selected shape while dragging
+     *
+     * @param x mouse x coordinate measured from the left edge of the window
+     * @param y mouse y coordinate measured from the top edge of the window
+     */
     void motion(int x, int y);
+
+    /**
+     * @brief switch tools with F1 through F6 and cancel dragging and unfinished polygons
+     *
+     * @param key special key code used by GLUT identifying the pressed function key
+     * @param x mouse x coordinate measured from the left edge of the window, unused by this handler
+     * @param y mouse y coordinate measured from the top edge of the window, unused by this handler
+     */
     void keyboard(int key, int x, int y);
+
+    /**
+     * @brief fill the selected shape with R, G or B, or delete it with Delete or Backspace
+     *
+     * @param key character code identifying the pressed regular key
+     * @param x mouse x coordinate measured from the left edge of the window, unused by this handler
+     * @param y mouse y coordinate measured from the top edge of the window, unused by this handler
+     */
     void normalKeyboard(unsigned char key, int x, int y);
     
-    // Drawing helpers
+    /**
+     * @brief draw the toolbar in window coordinates and highlight the current tool
+     */
     void drawNavbar();
+
+    /**
+     * @brief draw the unfinished shape or polygon vertices in canvas coordinates
+     */
     void drawPreview();
     
+    /**
+     * @brief forward the GLUT display event to the active application instance
+     */
     static void displayCallback();
+
+    /**
+     * @brief forward the GLUT window resize event to the active application instance
+     *
+     * @param w new window width in pixels
+     * @param h new window height in pixels
+     */
     static void reshapeCallback(int w, int h);
+
+    /**
+     * @brief forward the GLUT mouse button event to the active application instance
+     *
+     * @param button identifier used by GLUT of the mouse button that changed state
+     * @param state button state reported as GLUT_DOWN or GLUT_UP
+     * @param x mouse x coordinate measured from the left edge of the window
+     * @param y mouse y coordinate measured from the top edge of the window
+     */
     static void mouseCallback(int button, int state, int x, int y);
+
+    /**
+     * @brief forward the GLUT mouse drag event to the active application instance
+     *
+     * @param x mouse x coordinate measured from the left edge of the window
+     * @param y mouse y coordinate measured from the top edge of the window
+     */
     static void motionCallback(int x, int y);
+
+    /**
+     * @brief forward the GLUT special key event to the active application instance
+     *
+     * @param key special key code used by GLUT identifying the pressed function key
+     * @param x mouse x coordinate measured from the left edge of the window
+     * @param y mouse y coordinate measured from the top edge of the window
+     */
     static void keyboardCallback(int key, int x, int y);
+
+    /**
+     * @brief forward the GLUT regular key event to the active application instance
+     *
+     * @param key character code identifying the pressed regular key
+     * @param x mouse x coordinate measured from the left edge of the window
+     * @param y mouse y coordinate measured from the top edge of the window
+     */
     static void normalKeyboardCallback(unsigned char key, int x, int y);
 };
 
