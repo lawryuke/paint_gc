@@ -8,6 +8,7 @@ Este proyecto es una mini-aplicación de dibujo interactivo (estilo Paint) desar
 *   **Barra de Herramientas Interactiva (Navbar):** Interfaz gráfica clicable en la parte superior para intercambiar rápidamente entre las diferentes herramientas (F1 - F6).
 *   **Manipulación de Figuras (Hitbox):** 
     *   **Selección (F1):** Permite aislar una figura dibujada en el lienzo dándole clic. Aparecerá un marco punteado (Bounding Box) alrededor de ella.
+    *   **Borrado (Delete o Backspace):** Elimina la figura seleccionada. Si no hay una selección, no hace nada.
     *   **Traslación:** Manteniendo el clic presionado dentro de la figura seleccionada, se puede arrastrar por el lienzo.
     *   **Escalamiento:** Posee cuadrados (anclajes) en las cuatro esquinas que permiten encoger o agrandar dinámicamente la forma seleccionada.
     *   **Rotación:** Cuenta con un pivote en la parte superior del marco; arrastrando de él se girará la figura dinámicamente usando las matrices de modelo-vista (`GL_MODELVIEW`) de OpenGL.

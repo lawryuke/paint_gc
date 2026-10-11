@@ -29,6 +29,7 @@ void App::run(int argc, char** argv) {
     glutMouseFunc(mouseCallback);
     glutMotionFunc(motionCallback);
     glutSpecialFunc(keyboardCallback);
+    glutKeyboardFunc(normalKeyboardCallback);
     
     glutMainLoop();
 }
@@ -51,8 +52,8 @@ void App::drawNavbar() {
     glEnd();
     
     std::string tools[] = {
-        "F1: Select", "F2: Pan", "F3: Line", 
-        "F4: Rect", "F5: Ellipse", "F6: Polygon"
+        "Select", "Pan", "Line", 
+        "Rect", "Ellipse", "Polygon"
     };
     
     for(int i=0; i<6; ++i) {
@@ -307,9 +308,21 @@ void App::keyboard(int key, int x, int y) {
     glutPostRedisplay();
 }
 
+void App::normalKeyboard(unsigned char key, int x, int y) {
+    // GLUT sends Backspace (8) and Delete (127) as regular keyboard events.
+    if ((key != 8 && key != 127) || selectedShapeIndex == -1) return;
+
+    shapes.erase(shapes.begin() + selectedShapeIndex);
+    selectedShapeIndex = -1;
+    isDragging = false;
+    dragMode = DRAG_NONE;
+    glutPostRedisplay();
+}
+
 // Static callbacks wrapper
 void App::displayCallback() { if(instance) instance->display(); }
 void App::reshapeCallback(int w, int h) { if(instance) instance->reshape(w, h); }
 void App::mouseCallback(int button, int state, int x, int y) { if(instance) instance->mouse(button, state, x, y); }
 void App::motionCallback(int x, int y) { if(instance) instance->motion(x, y); }
 void App::keyboardCallback(int key, int x, int y) { if(instance) instance->keyboard(key, x, y); }
+void App::normalKeyboardCallback(unsigned char key, int x, int y) { if(instance) instance->normalKeyboard(key, x, y); }

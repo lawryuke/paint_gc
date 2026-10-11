@@ -39,6 +39,7 @@ public:
     void mouse(int button, int state, int x, int y);
     void motion(int x, int y);
     void keyboard(int key, int x, int y);
+    void normalKeyboard(unsigned char key, int x, int y);
     
     // Drawing helpers
     void drawNavbar();
@@ -49,6 +50,7 @@ public:
     static void mouseCallback(int button, int state, int x, int y);
     static void motionCallback(int x, int y);
     static void keyboardCallback(int key, int x, int y);
+    static void normalKeyboardCallback(unsigned char key, int x, int y);
 };
 
 #endif
